@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+data/edgar_raw/
+models/
+data/portfolio_log/
+.streamlit/secrets.toml
