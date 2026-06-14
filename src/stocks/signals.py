@@ -33,6 +33,17 @@ def label_for(z: float) -> str:
     return LABELS[-1][1]
 
 
+def compute_returns(closes: pd.DataFrame) -> pd.DataFrame:
+    """Return harga per ticker untuk beberapa horizon (kolom = ret_1B, dst)."""
+    periods = {"ret_1B": 21, "ret_3B": 63, "ret_6B": 126, "ret_1Th": 252}
+    last = closes.iloc[-1]
+    out = {}
+    for name, d in periods.items():
+        if len(closes) > d:
+            out[name] = last / closes.iloc[-1 - d] - 1
+    return pd.DataFrame(out)
+
+
 def recommend(panel, closes: pd.DataFrame,
               fund: pd.DataFrame | None = None,
               w_momentum: float = 1.0, w_growth: float = 1.0,
@@ -88,6 +99,11 @@ def recommend(panel, closes: pd.DataFrame,
         df["pos_52w"] = (cur - lo) / (hi - lo)
         # jarak dari puncak 52 mgg (negatif = di bawah puncak)
         df["dari_puncak"] = cur / hi - 1
+
+    # return harga beberapa horizon (konteks)
+    rets = compute_returns(closes.loc[:asof])
+    for col in rets.columns:
+        df[col] = rets[col].reindex(df.index)
 
     df = df.sort_values("skor", ascending=False)
     df.insert(0, "peringkat", range(1, len(df) + 1))
