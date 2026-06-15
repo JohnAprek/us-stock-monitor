@@ -349,8 +349,9 @@ m[4].metric("SPY (S&P 500) 1 thn",
             f"{spy_ret:+.0%}" if pd.notna(spy_ret) else "–",
             help="Acuan pasar — bandingkan return median saham vs beli indeks.")
 
-tab1, tab2, tab4, tab3 = st.tabs(["⭐ Rekomendasi", "📊 Ringkasan Pasar",
-                                  "⚖️ Banding", "🔍 Detail Saham"])
+tab1, tab5, tab2, tab4, tab3 = st.tabs(
+    ["⭐ Rekomendasi", "📬 Digest", "📊 Ringkasan Pasar",
+     "⚖️ Banding", "🔍 Detail Saham"])
 
 # ============ TAB 1: REKOMENDASI ============
 with tab1:
@@ -486,6 +487,59 @@ with tab4:
                    "lintasan tiap saham terhadap SPY (pasar).")
     else:
         st.info("Pilih minimal 2 saham untuk membandingkan.")
+
+# ============ TAB 5: DIGEST ============
+with tab5:
+    st.markdown(f"##### 📬 Digest rekomendasi · data {data_date}")
+    st.caption("Ringkasan yang juga dikirim otomatis ke Telegram tiap minggu "
+               "(jika diaktifkan). Perubahan dihitung sejak digest terakhir.")
+
+    import json as _json
+    state_p = ROOT / "data" / "last_digest.json"
+    prev_top = set()
+    if state_p.exists():
+        try:
+            prev_top = set(_json.loads(state_p.read_text(encoding="utf-8"))
+                           .get("top", []))
+        except Exception:
+            prev_top = set()
+
+    top10 = rec.head(10)
+    cur_top = list(top10.index)
+    new_in = [t for t in cur_top if t not in prev_top]
+    dropped = [t for t in prev_top if t not in cur_top]
+
+    if new_in or dropped:
+        cda, cdb = st.columns(2)
+        cda.success("🆕 Masuk top 10: " + (", ".join(new_in) if new_in else "–"))
+        cdb.warning("🔻 Keluar top 10: " + (", ".join(dropped) if dropped else "–"))
+
+    dg = top10[["shortName", "rekomendasi", "skor", "currentPrice",
+                "upside_target", "ret_1Th"]].copy()
+    dg.insert(0, "#", range(1, len(dg) + 1))
+    dg.columns = ["#", "Nama", "Rekomendasi", "Skor", "Harga", "Upside", "Ret 1Th"]
+    st.dataframe(
+        dg.style.format({"Skor": "{:+.2f}", "Harga": "${:.2f}",
+                         "Upside": "{:+.1%}", "Ret 1Th": "{:+.1%}"}, na_rep="–"),
+        width="stretch", hide_index=True)
+
+    soon = []
+    for t, rr in rec.head(40).iterrows():
+        d = earnings_days(rr)
+        if d is not None and 0 <= d <= 7:
+            soon.append(f"{t} ({d}h)")
+    if soon:
+        st.info("📅 Rilis laba ≤ 7 hari: " + ", ".join(soon))
+
+    with st.expander("🔔 Aktifkan kiriman Telegram (sekali setup)"):
+        st.markdown("""
+1. Telegram → chat **@BotFather** → `/newbot` → salin **token**.
+2. Chat **@userinfobot** → salin **Id** (angka) Anda.
+3. Tekan **Start** di bot baru Anda.
+4. GitHub repo → **Settings → Secrets and variables → Actions** → tambah
+   `TELEGRAM_BOT_TOKEN` dan `TELEGRAM_CHAT_ID`.
+5. Uji: **Actions → Update data → Run workflow**. Digest masuk ke Telegram.
+""")
 
 # ============ TAB 3: DETAIL SAHAM ============
 with tab3:
