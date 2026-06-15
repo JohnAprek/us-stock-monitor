@@ -87,18 +87,22 @@ def load_panel():
 def get_recommendations(w_mom, w_grw):
     fund, closes = load_prices_fund()
     panel = load_panel()
-    if panel is None or fund is None:
-        return None, closes, fund
-    return recommend(panel, closes, fund, w_momentum=w_mom, w_growth=w_grw), closes, fund
+    if closes is None or closes.empty:
+        return None, closes, fund, {"prices": False, "growth": False, "fund": False}
+    try:
+        rec = recommend(panel, closes, fund, w_momentum=w_mom, w_growth=w_grw)
+    except Exception as e:  # degradasi anggun: jangan pernah blank
+        rec = None
+        st.session_state["rec_error"] = str(e)
+    status = {"prices": True, "growth": panel is not None,
+              "fund": fund is not None}
+    return rec, closes, fund, status
 
 
 fund0, closes0 = load_prices_fund()
-if fund0 is None or load_panel() is None:
-    st.error("Data belum lengkap. Jalankan dulu:\n\n"
-             "`python scripts/fetch_stocks.py`\n"
-             "`python scripts/fetch_fundamentals.py`\n"
-             "`python scripts/fetch_edgar.py`\n"
-             "`python scripts/build_edgar_dataset.py`")
+if closes0 is None or closes0.empty:
+    st.error("Data harga belum ada. Jalankan dulu:\n\n"
+             "`python scripts/fetch_stocks.py`")
     st.stop()
 
 # ---------- sidebar ----------
@@ -134,8 +138,35 @@ w_mom = st.sidebar.slider("Momentum harga", 0.0, 2.0, 1.0, 0.25)
 w_grw = st.sidebar.slider("Growth fundamental", 0.0, 2.0, 1.0, 0.25)
 st.sidebar.caption("Default 1:1 — dua sinyal tervalidasi proyek ini.")
 
-rec, closes, fund = get_recommendations(w_mom, w_grw)
+rec, closes, fund, status = get_recommendations(w_mom, w_grw)
 data_date = closes.index[-1].date()
+
+if rec is None or rec.empty:
+    st.error("Gagal menyusun rekomendasi dari data yang ada. "
+             "Coba perbarui data lewat sidebar.")
+    if st.session_state.get("rec_error"):
+        st.caption(f"Detail: {st.session_state['rec_error']}")
+    st.stop()
+
+# pastikan semua kolom opsional ada (NaN bila sumbernya bolong) → UI tak crash
+OPTIONAL_COLS = ["shortName", "sector", "currentPrice", "targetMeanPrice",
+                 "targetLowPrice", "targetHighPrice", "upside_target",
+                 "recommendationKey", "numberOfAnalystOpinions",
+                 "fiftyTwoWeekHigh", "fiftyTwoWeekLow", "pos_52w", "dari_puncak",
+                 "dividendYield", "forwardPE", "marketCap", "net_margin",
+                 "op_margin", "roe", "rev_growth", "earnings_yield",
+                 "ret_1B", "ret_3B", "ret_6B", "ret_1Th"]
+for c in OPTIONAL_COLS:
+    if c not in rec.columns:
+        rec[c] = pd.NA
+
+# banner degradasi: bila salah satu sumber data bolong, app tetap jalan
+if not status["growth"]:
+    st.warning("⚠️ Data fundamental SEC (growth) tidak tersedia — peringkat "
+               "memakai **momentum saja**. Perbarui via sidebar untuk skor penuh.")
+if not status["fund"]:
+    st.info("ℹ️ Data harga/target analis (Yahoo) tidak tersedia — kolom konteks "
+            "mungkin kosong. Peringkat tetap dari momentum + growth.")
 
 st.sidebar.subheader("🔎 Filter")
 sectors = ["Semua"] + sorted(rec["sector"].dropna().unique())
@@ -196,9 +227,9 @@ with tab1:
     top5 = rec.head(5)
     cards = st.columns(5)
     for col, (tkr, r) in zip(cards, top5.iterrows()):
-        up = r["upside_target"]
+        up = pd.to_numeric(r.get("upside_target"), errors="coerce")
         up_txt = f"{up:+.0%}" if pd.notna(up) else "–"
-        price = r.get("currentPrice")
+        price = pd.to_numeric(r.get("currentPrice"), errors="coerce")
         price_txt = f"${price:,.2f}" if pd.notna(price) else "–"
         col.markdown(f"""
 <div class="pick-card">

@@ -1,7 +1,8 @@
-streamlit
-pandas
-numpy
-yfinance
-pyarrow
-requests
-PyYAML
+# Versi dipin ke yang sudah teruji (PRD v2.0 C1) — cegah update memecah UI.
+streamlit==1.58.0
+pandas==3.0.3
+numpy==2.4.6
+pyarrow==24.0.0
+yfinance==1.4.1
+requests==2.34.2
+PyYAML==6.0.3

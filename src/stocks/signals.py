@@ -55,9 +55,14 @@ def recommend(panel, closes: pd.DataFrame,
     fund  : fundamental Yahoo (opsional, untuk kolom konteks)
     """
     asof = asof or closes.index[-1]
-    snap = panel.snapshot(asof, closes.loc[:asof].iloc[-1])
-    growth = edgar_scores(snap)["growth"]
     mom = momentum_score(closes, asof)
+    # panel EDGAR opsional: bila tak ada, jalan momentum-only (degradasi anggun)
+    if panel is not None:
+        snap = panel.snapshot(asof, closes.loc[:asof].iloc[-1])
+        growth = edgar_scores(snap)["growth"]
+    else:
+        snap = pd.DataFrame(index=mom.index)
+        growth = pd.Series(np.nan, index=mom.index)
 
     idx = growth.dropna().index.union(mom.index)
     df = pd.DataFrame(index=idx)

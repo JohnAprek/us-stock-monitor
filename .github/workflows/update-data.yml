@@ -1,0 +1,60 @@
+name: Update data
+
+# Auto-update data (PRD v2.0 B1): harga + fundamental tiap minggu,
+# laporan SEC EDGAR ~bulanan (minggu pertama). Commit & push -> Streamlit
+# Cloud auto-redeploy dengan data segar. Tanpa secret (Yahoo & SEC publik).
+
+on:
+  schedule:
+    - cron: '0 6 * * 1'        # tiap Senin 06:00 UTC
+  workflow_dispatch:            # tombol jalankan manual di tab Actions
+
+permissions:
+  contents: write
+
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+
+      - name: Install deps
+        run: pip install -r requirements.txt
+
+      - name: Fetch harga
+        run: python scripts/fetch_stocks.py
+
+      - name: Fetch fundamental (Yahoo)
+        run: python scripts/fetch_fundamentals.py
+
+      - name: Refresh SEC EDGAR (bulanan, minggu pertama)
+        run: |
+          DOM=$(date -u +%d)
+          if [ "$DOM" -le 7 ]; then
+            echo "Minggu pertama bulan -> refresh EDGAR"
+            python scripts/fetch_edgar.py
+            python scripts/build_edgar_dataset.py
+          else
+            echo "Bukan minggu pertama -> lewati EDGAR (data kuartalan)"
+          fi
+
+      - name: Commit & push bila ada perubahan
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          if git diff --cached --quiet; then
+            echo "Tidak ada perubahan data."
+          else
+            git commit -m "chore(data): auto-update $(date -u +%Y-%m-%d)"
+            git push
+          fi
