@@ -168,36 +168,85 @@ if not status["fund"]:
     st.info("ℹ️ Data harga/target analis (Yahoo) tidak tersedia — kolom konteks "
             "mungkin kosong. Peringkat tetap dari momentum + growth.")
 
+# ---------- watchlist (tersimpan di URL, bisa di-bookmark) ----------
+def get_watchlist():
+    raw = st.query_params.get("wl", "")
+    return [t for t in raw.split(",") if t]
+
+
+def set_watchlist(tickers):
+    st.query_params["wl"] = ",".join(sorted(set(tickers)))
+
+
+st.sidebar.subheader("⭐ Watchlist")
+wl_now = [t for t in get_watchlist() if t in rec.index]
+wl = st.sidebar.multiselect("Saham favorit (tersimpan di URL)",
+                            options=rec.index.tolist(), default=wl_now)
+if set(wl) != set(wl_now):
+    set_watchlist(wl)
+    st.rerun()
+only_wl = st.sidebar.checkbox(f"Hanya watchlist ({len(wl)})", False,
+                              disabled=not wl)
+
 st.sidebar.subheader("🔎 Filter")
+compact = st.sidebar.toggle("📱 Tampilan ringkas (HP)", False)
+preset = st.sidebar.selectbox(
+    "Preset screener",
+    ["Custom", "Growth + dividen", "Momentum kuat & dekat puncak",
+     "Skor tinggi & upside analis ≥ 15%"])
 sectors = ["Semua"] + sorted(rec["sector"].dropna().unique())
 sel_sector = st.sidebar.selectbox("Sektor", sectors)
-only_rec = st.sidebar.checkbox("Hanya yang direkomendasikan (skor ≥ 0,3)", True)
-min_upside = st.sidebar.slider("Upside ke target analis min. (%)", -20, 50, -20, 5)
-div_only = st.sidebar.checkbox("Hanya yang membayar dividen", False)
+search = st.sidebar.text_input("Cari ticker / nama").strip().upper()
+
+manual = preset == "Custom"
+only_rec = st.sidebar.checkbox("Hanya direkomendasikan (skor ≥ 0,3)", True,
+                               disabled=not manual)
+min_upside = st.sidebar.slider("Upside ke target analis min. (%)", -20, 50, -20,
+                               5, disabled=not manual)
+div_only = st.sidebar.checkbox("Hanya yang membayar dividen", False,
+                               disabled=not manual)
 sort_by = st.sidebar.selectbox(
     "Urutkan",
     ["Skor", "Upside analis", "Momentum", "Growth", "Return 1 tahun",
      "Dividend yield", "Kapitalisasi"])
-search = st.sidebar.text_input("Cari ticker / nama").strip().upper()
 
 SORT_MAP = {"Skor": "skor", "Upside analis": "upside_target",
             "Momentum": "z_momentum", "Growth": "z_growth",
             "Return 1 tahun": "ret_1Th", "Dividend yield": "dividendYield",
             "Kapitalisasi": "marketCap"}
 
+
+def num_col(df, c):
+    return pd.to_numeric(df[c], errors="coerce")
+
+
 view = rec.copy()
+if only_wl and wl:
+    view = view[view.index.isin(wl)]
 if sel_sector != "Semua":
     view = view[view["sector"] == sel_sector]
-if only_rec:
-    view = view[view["skor"] >= 0.3]
-if min_upside > -20:
-    view = view[view["upside_target"] >= min_upside / 100]
-if div_only:
-    view = view[view["dividendYield"].fillna(0) > 0]
 if search:
     m = view.index.str.contains(search) | \
         view["shortName"].fillna("").str.upper().str.contains(search)
     view = view[m]
+
+if preset == "Growth + dividen":
+    view = view[(view["skor"] >= 0.3) & (view["z_growth"] >= 0.3) &
+                (num_col(view, "dividendYield").fillna(0) > 0)]
+elif preset == "Momentum kuat & dekat puncak":
+    view = view[(view["z_momentum"] >= 0.5) &
+                (num_col(view, "dari_puncak") >= -0.10)]
+elif preset == "Skor tinggi & upside analis ≥ 15%":
+    view = view[(view["skor"] >= 0.5) &
+                (num_col(view, "upside_target") >= 0.15)]
+else:  # Custom
+    if only_rec:
+        view = view[view["skor"] >= 0.3]
+    if min_upside > -20:
+        view = view[num_col(view, "upside_target") >= min_upside / 100]
+    if div_only:
+        view = view[num_col(view, "dividendYield").fillna(0) > 0]
+
 view = view.sort_values(SORT_MAP[sort_by], ascending=False)
 
 # ---------- header + ringkasan ----------
@@ -206,10 +255,32 @@ st.caption(f"Saham US paling direkomendasikan · momentum + pertumbuhan "
            f"fundamental · data per **{data_date}** · {len(rec)} saham dianalisis. "
            f"Alat bantu riset, bukan saran investasi.")
 
+with st.expander("ℹ️ Apa arti skor & rekomendasi ini? (baca dulu)"):
+    st.markdown("""
+**Peringkat ditentukan oleh 2 hal saja** (yang terbukti punya nilai lewat
+backtest jujur di proyek ini):
+
+- **Momentum** — saham yang harganya menguat 6 bulan terakhir cenderung
+  melanjutkan tren dalam jangka menengah.
+- **Growth** — perusahaan yang revenue & labanya tumbuh (dari laporan resmi SEC).
+
+Skor adalah gabungan keduanya, **relatif terhadap ~113 saham lain** (z-score).
+Skor `+1` berarti jauh di atas rata-rata; `0` rata-rata; negatif di bawah.
+
+**Yang HANYA konteks (tidak memengaruhi peringkat):** harga, target & rekomendasi
+analis, valuasi (P/E), dividen, return, berita. Berguna untuk menilai, tapi
+bukan dasar peringkat — mis. target analis terkenal terlalu optimistis.
+
+**Batasan jujur:** universe ini saham yang bertahan sampai sekarang
+(*survivorship bias* → angka cenderung terlalu bagus), dan periode uji tak
+memuat krisis 2008. Ini **alat penyaring**, bukan jaminan profit. Tetap baca
+bisnisnya, dan **eksekusi beli dilakukan manual** oleh Anda di broker sendiri.
+""")
+
 n_strong = int((rec["skor"] >= 1.0).sum())
 n_buy = int(((rec["skor"] >= 0.3) & (rec["skor"] < 1.0)).sum())
-avg_up = rec["upside_target"].median()
-best_ret = rec["ret_1Th"].median() if "ret_1Th" in rec else float("nan")
+avg_up = pd.to_numeric(rec["upside_target"], errors="coerce").median()
+best_ret = pd.to_numeric(rec["ret_1Th"], errors="coerce").median()
 m = st.columns(4)
 m[0].metric("⭐ Sangat direkomendasikan", n_strong)
 m[1].metric("✅ Direkomendasikan", n_buy)
@@ -241,23 +312,36 @@ with tab1:
   <div class="muted">Skor {r['skor']:+.2f}</div>
 </div>""", unsafe_allow_html=True)
 
-    st.markdown(f"##### 📋 Daftar ({len(view)} saham · urut: {sort_by})")
-    cols_show = ["peringkat", "shortName", "sector", "rekomendasi", "skor",
-                 "z_momentum", "z_growth", "currentPrice", "targetMeanPrice",
-                 "upside_target", "ret_3B", "ret_1Th", "dari_puncak",
-                 "dividendYield", "forwardPE", "recommendationKey"]
+    head_l, head_r = st.columns([3, 1])
+    head_l.markdown(f"##### 📋 Daftar ({len(view)} saham · urut: {sort_by}"
+                    + (f" · preset: {preset}" if preset != "Custom" else "") + ")")
+    head_r.download_button("⬇️ Unduh CSV", view.to_csv().encode("utf-8"),
+                           "rekomendasi.csv", "text/csv",
+                           use_container_width=True)
+
+    if compact:
+        cols_show = ["peringkat", "shortName", "rekomendasi", "skor",
+                     "currentPrice", "upside_target"]
+        names = ["#", "Nama", "Rekomendasi", "Skor", "Harga", "Upside"]
+        fmt = {"Skor": "{:+.2f}", "Harga": "${:.2f}", "Upside": "{:+.1%}"}
+    else:
+        cols_show = ["peringkat", "shortName", "sector", "rekomendasi", "skor",
+                     "z_momentum", "z_growth", "currentPrice", "targetMeanPrice",
+                     "upside_target", "ret_3B", "ret_1Th", "dari_puncak",
+                     "dividendYield", "forwardPE", "recommendationKey"]
+        names = ["#", "Nama", "Sektor", "Rekomendasi", "Skor", "Mom", "Growth",
+                 "Harga", "Target", "Upside", "Ret 3B", "Ret 1Th", "Dari puncak",
+                 "Div", "P/E", "Analis"]
+        fmt = {"Skor": "{:+.2f}", "Mom": "{:+.2f}", "Growth": "{:+.2f}",
+               "Harga": "${:.2f}", "Target": "${:.2f}", "Upside": "{:+.1%}",
+               "Ret 3B": "{:+.1%}", "Ret 1Th": "{:+.1%}", "Dari puncak": "{:+.1%}",
+               "Div": "{:.2f}%", "P/E": "{:.1f}"}
     show = view[[c for c in cols_show if c in view.columns]].copy()
-    show.columns = ["#", "Nama", "Sektor", "Rekomendasi", "Skor", "Mom",
-                    "Growth", "Harga", "Target", "Upside", "Ret 3B", "Ret 1Th",
-                    "Dari puncak", "Div", "P/E", "Analis"]
+    show.columns = names
     st.dataframe(
         show.style
         .background_gradient(subset=["Skor"], cmap="RdYlGn", vmin=-2, vmax=2)
-        .format({"Skor": "{:+.2f}", "Mom": "{:+.2f}", "Growth": "{:+.2f}",
-                 "Harga": "${:.2f}", "Target": "${:.2f}", "Upside": "{:+.1%}",
-                 "Ret 3B": "{:+.1%}", "Ret 1Th": "{:+.1%}",
-                 "Dari puncak": "{:+.1%}", "Div": "{:.2f}%", "P/E": "{:.1f}"},
-                na_rep="–"),
+        .format(fmt, na_rep="–"),
         width="stretch", height=520, hide_index=True)
     st.caption("**Penggerak skor:** Momentum & Growth. **Konteks (tak "
                "memengaruhi peringkat):** harga, target & rekomendasi analis, "
@@ -317,6 +401,13 @@ with tab3:
                     unsafe_allow_html=True)
         st.caption(f"{r.get('sector', '')} · peringkat #{int(r['peringkat'])} "
                    f"dari {len(rec)}")
+
+        in_wl = pick in wl
+        if st.button(("✅ Di watchlist — klik untuk hapus" if in_wl
+                      else "⭐ Tambah ke watchlist"), key="wl_btn"):
+            new_wl = [t for t in wl if t != pick] if in_wl else wl + [pick]
+            set_watchlist(new_wl)
+            st.rerun()
 
         k = st.columns(4)
         k[0].metric("Skor total", f"{r['skor']:+.2f}")
