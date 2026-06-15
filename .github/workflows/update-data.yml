@@ -51,6 +51,7 @@ jobs:
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          SUBSCRIBE_URL: ${{ vars.SUBSCRIBE_URL }}
         run: python scripts/send_digest.py
 
       - name: Commit & push bila ada perubahan

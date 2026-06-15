@@ -32,7 +32,10 @@ except Exception:
 BENCH = ["SPY", "QQQ"]
 TOPN = 10
 STATE = ROOT / "data" / "last_digest.json"
-MD = ROOT / "data" / "latest_digest.md"
+MD = ROOT / "data" / "latest_digest.md"            # premium (penuh)
+MD_FREE = ROOT / "data" / "digest_free.md"          # teaser publik
+# ganti dengan link checkout Anda (Substack/Gumroad/Stripe) saat sudah ada
+SUBSCRIBE_URL = os.environ.get("SUBSCRIBE_URL", "https://your-substack-here")
 
 
 def load_rec():
@@ -70,39 +73,61 @@ def build(rec, data_date):
             prev = {}
     prev_top = set(prev.get("top", []))
     cur_top = list(top.index)
-
     new_in = [t for t in cur_top if t not in prev_top]
     dropped = [t for t in prev_top if t not in cur_top]
 
-    lines = [f"📈 *US Stock Monitor — Digest {data_date}*", ""]
-    lines.append(f"*{TOPN} Teratas (momentum + growth):*")
-    for rank, (t, r) in enumerate(top.iterrows(), 1):
-        price = pd.to_numeric(r.get("currentPrice"), errors="coerce")
-        up = pd.to_numeric(r.get("upside_target"), errors="coerce")
-        ptxt = f"${price:,.0f}" if pd.notna(price) else "–"
-        lines.append(f"{rank}. *{t}* — skor {r['skor']:+.2f} · {ptxt} · "
-                     f"target {fmt_pct(up)}")
-
-    if new_in:
-        lines += ["", f"🆕 *Masuk top {TOPN}:* " + ", ".join(new_in)]
-    if dropped:
-        lines += [f"🔻 *Keluar top {TOPN}:* " + ", ".join(dropped)]
-
+    n_strong = int((rec["skor"] >= 1.0).sum())
+    n_buy = int(((rec["skor"] >= 0.3) & (rec["skor"] < 1.0)).sum())
     soon = []
     for t, r in rec.head(40).iterrows():
         d = earnings_days(r)
         if d is not None and 0 <= d <= 7:
-            soon.append(f"{t} ({d}h)")
-    if soon:
-        lines += ["", "📅 *Rilis laba ≤ 7 hari:* " + ", ".join(soon)]
+            soon.append(f"{t} ({d}d)")
 
-    lines += ["", "_Alat riset, bukan saran investasi._"]
-    msg = "\n".join(lines)
+    # ---------- PREMIUM (penuh, untuk pelanggan) ----------
+    p = [f"📈 *US Stock Monitor — Premium Digest · {data_date}*", "",
+         f"_{n_strong} strongly recommended · {n_buy} recommended · "
+         f"{len(rec)} S&P 500 stocks · momentum + growth model_", "",
+         f"*Top {TOPN}:*"]
+    for rank, (t, r) in enumerate(top.iterrows(), 1):
+        price = pd.to_numeric(r.get("currentPrice"), errors="coerce")
+        up = pd.to_numeric(r.get("upside_target"), errors="coerce")
+        ret = pd.to_numeric(r.get("ret_1Th"), errors="coerce")
+        ptxt = f"${price:,.0f}" if pd.notna(price) else "–"
+        p.append(f"{rank}. *{t}* — score {r['skor']:+.2f} · {ptxt} · "
+                 f"analyst target {fmt_pct(up)} · 1y {fmt_pct(ret)}")
+    if new_in:
+        p += ["", f"🆕 *New in top {TOPN}:* " + ", ".join(new_in)]
+    if dropped:
+        p += [f"🔻 *Dropped from top {TOPN}:* " + ", ".join(dropped)]
+    if soon:
+        p += ["", "📅 *Earnings within 7 days:* " + ", ".join(soon)]
+    p += ["", "_Research tool, not investment advice. You execute trades "
+          "yourself._"]
+    premium = "\n".join(p)
+
+    # ---------- FREE (teaser publik, untuk menarik pelanggan) ----------
+    f = [f"📈 *US Stock Monitor — Free Weekly Digest · {data_date}*", "",
+         f"This week: *{n_strong} strongly recommended* and {n_buy} recommended "
+         f"out of {len(rec)} S&P 500 stocks (momentum + growth model).", "",
+         "*Today's top 3:* " + ", ".join(cur_top[:3]) + " …"]
+    if new_in:
+        f += [f"🆕 {len(new_in)} new name(s) entered the top {TOPN} this week."]
+    if soon:
+        f += [f"📅 {len(soon)} top pick(s) report earnings within 7 days."]
+    f += ["",
+          f"🔓 *Premium* unlocks the full top {TOPN} with scores, prices, "
+          "analyst targets, every ranking change, earnings alerts & watchlist "
+          "signals — delivered weekly.",
+          f"👉 Subscribe: {SUBSCRIBE_URL}", "",
+          "_Research tool, not investment advice._"]
+    free = "\n".join(f)
 
     STATE.write_text(json.dumps({"date": str(data_date), "top": cur_top}),
                      encoding="utf-8")
-    MD.write_text(msg.replace("*", "**"), encoding="utf-8")
-    return msg
+    MD.write_text(premium.replace("*", "**"), encoding="utf-8")
+    MD_FREE.write_text(free.replace("*", "**"), encoding="utf-8")
+    return premium
 
 
 def send_telegram(text):
