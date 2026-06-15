@@ -34,8 +34,19 @@ TOPN = 10
 STATE = ROOT / "data" / "last_digest.json"
 MD = ROOT / "data" / "latest_digest.md"            # premium (penuh)
 MD_FREE = ROOT / "data" / "digest_free.md"          # teaser publik
-# ganti dengan link checkout Anda (Substack/Gumroad/Stripe) saat sudah ada
-SUBSCRIBE_URL = os.environ.get("SUBSCRIBE_URL", "https://your-substack-here")
+def _subscribe_url():
+    u = os.environ.get("SUBSCRIBE_URL", "").strip()
+    if u:
+        return u
+    f = ROOT / "data" / "subscribe_url.txt"
+    try:
+        u = f.read_text(encoding="utf-8").strip()
+    except Exception:
+        u = ""
+    return u or "https://your-substack-here"
+
+
+SUBSCRIBE_URL = _subscribe_url()
 
 
 def load_rec():

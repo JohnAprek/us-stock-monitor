@@ -73,6 +73,16 @@ def badge_html(label: str) -> str:
 BENCHMARKS = ["SPY", "QQQ"]
 
 
+def subscribe_url():
+    """URL langganan premium (Substack). Diisi di data/subscribe_url.txt."""
+    f = ROOT / "data" / "subscribe_url.txt"
+    try:
+        u = f.read_text(encoding="utf-8").strip()
+        return u if u and "your-substack-here" not in u else None
+    except Exception:
+        return None
+
+
 def earnings_days(r):
     """Sisa hari ke rilis laba berikutnya (dari earningsTimestampStart)."""
     ts = pd.to_numeric(r.get("earningsTimestampStart"), errors="coerce")
@@ -136,6 +146,12 @@ if closes0 is None or closes0.empty:
 # ---------- sidebar ----------
 st.sidebar.title("📈 US Stock Monitor")
 st.sidebar.caption("Pantau & saring saham US paling direkomendasikan.")
+
+_sub = subscribe_url()
+if _sub:
+    st.sidebar.link_button("⭐ Get Premium Digest", _sub,
+                           use_container_width=True, type="primary")
+    st.sidebar.caption("Weekly top picks + ranking changes + earnings alerts.")
 
 with st.sidebar.expander("🔄 Perbarui data", expanded=False):
     def run_refresh(scripts):
@@ -530,6 +546,12 @@ with tab5:
             soon.append(f"{t} ({d}h)")
     if soon:
         st.info("📅 Rilis laba ≤ 7 hari: " + ", ".join(soon))
+
+    _sub2 = subscribe_url()
+    if _sub2:
+        st.success("📬 **Get this digest every week** — full top 10, ranking "
+                   "changes & earnings alerts delivered to your inbox.")
+        st.link_button("⭐ Subscribe to Premium", _sub2, type="primary")
 
     with st.expander("🔔 Aktifkan kiriman Telegram (sekali setup)"):
         st.markdown("""
