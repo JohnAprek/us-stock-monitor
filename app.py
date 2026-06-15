@@ -106,15 +106,6 @@ def load_panel():
     return PITPanel(pd.read_parquet(pq)) if pq.exists() else None
 
 
-@st.cache_data(ttl=3600)
-def usd_idr():
-    f = ROOT / "data" / "fx_usd_idr.txt"
-    try:
-        return float(f.read_text().strip())
-    except Exception:
-        return None
-
-
 @st.cache_data(ttl=1800)
 def get_recommendations(w_mom, w_grw):
     fund, closes = load_prices_fund()
@@ -183,9 +174,6 @@ with st.sidebar.expander("ℹ️ Status data", expanded=False):
     st.caption(f"Harga: {_age('prices.parquet')}")
     st.caption(f"Fundamental: {_age('fundamentals.csv')}")
     st.caption(f"Laporan SEC: {_age('edgar_normalized.parquet')}")
-    fxr = usd_idr()
-    if fxr:
-        st.caption(f"Kurs USD/IDR: Rp {fxr:,.0f}")
 
 st.sidebar.subheader("⚙️ Bobot sinyal")
 w_mom = st.sidebar.slider("Momentum harga", 0.0, 2.0, 1.0, 0.25)
@@ -536,10 +524,6 @@ with tab3:
         cur, tgt = num("currentPrice"), num("targetMeanPrice")
         k[3].metric("Harga", f"${cur:,.2f}" if pd.notna(cur) else "–",
                     f"{(tgt-cur)/cur:+.1%} ke target" if pd.notna(tgt) and pd.notna(cur) else None)
-        fxr = usd_idr()
-        if fxr and pd.notna(cur):
-            st.caption(f"≈ Rp {cur * fxr:,.0f} per saham "
-                       f"(kurs Rp {fxr:,.0f}/USD, perkiraan)")
 
         left, right = st.columns([3, 2])
         with left:
