@@ -1,5 +1,6 @@
+# Tema mengikuti pilihan pengguna (menu ☰ → Settings → Theme: Light/Dark/System).
+# CSS aplikasi adaptif via variabel tema, jadi terang & gelap sama-sama rapi.
 [theme]
-base = "light"
 primaryColor = "#1f9d55"
 
 [server]

@@ -28,8 +28,10 @@ st.set_page_config(page_title="US Stock Monitor", page_icon="📈",
 st.markdown("""
 <style>
 .block-container {padding-top: 2rem; padding-bottom: 2rem;}
+/* kartu adaptif tema (terang/gelap) via variabel Streamlit */
 [data-testid="stMetric"] {
-    background: #f8f9fb; border: 1px solid #eaecf0; border-radius: 12px;
+    background: var(--secondary-background-color);
+    border: 1px solid rgba(128,128,128,.2); border-radius: 12px;
     padding: 14px 16px;
 }
 [data-testid="stMetricLabel"] {opacity: .7;}
@@ -37,17 +39,19 @@ st.markdown("""
     font-size:.78rem; font-weight:600; white-space:nowrap;}
 .b-strong{background:#dcfce7;color:#15803d;}
 .b-buy{background:#e0f2fe;color:#0369a1;}
-.b-neutral{background:#f1f5f9;color:#475569;}
+.b-neutral{background:#e2e8f0;color:#475569;}
 .b-weak{background:#fef3c7;color:#b45309;}
-.pick-card{background:#fff;border:1px solid #eaecf0;border-radius:14px;
+.pick-card{background:var(--secondary-background-color);
+    border:1px solid rgba(128,128,128,.2);border-radius:14px;
     padding:14px 16px;height:100%;}
 .pick-tkr{font-size:1.15rem;font-weight:700;margin-bottom:2px;}
-.pick-name{font-size:.78rem;color:#64748b;margin-bottom:8px;
+.pick-name{font-size:.78rem;opacity:.65;margin-bottom:8px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.muted{color:#64748b;font-size:.82rem;}
-.posbar{height:8px;border-radius:6px;background:#e2e8f0;position:relative;}
+.muted{opacity:.65;font-size:.82rem;}
+.posbar{height:8px;border-radius:6px;background:rgba(128,128,128,.25);
+    position:relative;}
 .posbar > div{position:absolute;top:-3px;width:14px;height:14px;border-radius:50%;
-    background:#0ea5e9;transform:translateX(-50%);}
+    background:var(--primary-color, #0ea5e9);transform:translateX(-50%);}
 </style>
 """, unsafe_allow_html=True)
 
@@ -102,6 +106,15 @@ def load_panel():
     return PITPanel(pd.read_parquet(pq)) if pq.exists() else None
 
 
+@st.cache_data(ttl=3600)
+def usd_idr():
+    f = ROOT / "data" / "fx_usd_idr.txt"
+    try:
+        return float(f.read_text().strip())
+    except Exception:
+        return None
+
+
 @st.cache_data(ttl=1800)
 def get_recommendations(w_mom, w_grw):
     fund, closes = load_prices_fund()
@@ -145,17 +158,34 @@ with st.sidebar.expander("🔄 Perbarui data", expanded=False):
         st.session_state["refresh_log"] = logs
 
     if st.button("Harga + Fundamental", use_container_width=True):
-        run_refresh([("Harga", "fetch_stocks.py"),
+        run_refresh([("Harga", "fetch_prices.py"),
                      ("Fundamental", "fetch_fundamentals.py")])
         st.rerun()
     if st.button("+ Laporan SEC (kuartalan)", use_container_width=True):
-        run_refresh([("Harga", "fetch_stocks.py"),
+        run_refresh([("Harga", "fetch_prices.py"),
                      ("Fundamental", "fetch_fundamentals.py"),
                      ("SEC unduh", "fetch_edgar.py"),
                      ("SEC olah", "build_edgar_dataset.py")])
         st.rerun()
     for line in st.session_state.get("refresh_log", []):
         st.caption(line)
+
+with st.sidebar.expander("ℹ️ Status data", expanded=False):
+    import datetime as _dt
+
+    def _age(path):
+        p = ROOT / "data" / path
+        if not p.exists():
+            return "—"
+        days = (_dt.datetime.now().timestamp() - p.stat().st_mtime) / 86400
+        return f"{days:.0f} hari lalu"
+
+    st.caption(f"Harga: {_age('prices.parquet')}")
+    st.caption(f"Fundamental: {_age('fundamentals.csv')}")
+    st.caption(f"Laporan SEC: {_age('edgar_normalized.parquet')}")
+    fxr = usd_idr()
+    if fxr:
+        st.caption(f"Kurs USD/IDR: Rp {fxr:,.0f}")
 
 st.sidebar.subheader("⚙️ Bobot sinyal")
 w_mom = st.sidebar.slider("Momentum harga", 0.0, 2.0, 1.0, 0.25)
@@ -178,7 +208,8 @@ OPTIONAL_COLS = ["shortName", "sector", "currentPrice", "targetMeanPrice",
                  "recommendationKey", "numberOfAnalystOpinions",
                  "fiftyTwoWeekHigh", "fiftyTwoWeekLow", "pos_52w", "dari_puncak",
                  "dividendYield", "forwardPE", "marketCap", "net_margin",
-                 "op_margin", "roe", "rev_growth", "earnings_yield",
+                 "op_margin", "gross_margin", "fcf_margin", "current_ratio",
+                 "buyback_yoy", "roe", "rev_growth", "earnings_yield",
                  "ret_1B", "ret_3B", "ret_6B", "ret_1Th"]
 for c in OPTIONAL_COLS:
     if c not in rec.columns:
@@ -505,6 +536,10 @@ with tab3:
         cur, tgt = num("currentPrice"), num("targetMeanPrice")
         k[3].metric("Harga", f"${cur:,.2f}" if pd.notna(cur) else "–",
                     f"{(tgt-cur)/cur:+.1%} ke target" if pd.notna(tgt) and pd.notna(cur) else None)
+        fxr = usd_idr()
+        if fxr and pd.notna(cur):
+            st.caption(f"≈ Rp {cur * fxr:,.0f} per saham "
+                       f"(kurs Rp {fxr:,.0f}/USD, perkiraan)")
 
         left, right = st.columns([3, 2])
         with left:
@@ -544,10 +579,14 @@ with tab3:
         st.markdown("**📊 Fundamental** _(konteks — tidak memengaruhi skor)_")
         fcols = st.columns(4)
         items = [
-            ("Net margin", "net_margin", "{:.1%}"),
+            ("Gross margin", "gross_margin", "{:.1%}"),
             ("Operating margin", "op_margin", "{:.1%}"),
+            ("Net margin", "net_margin", "{:.1%}"),
+            ("FCF margin", "fcf_margin", "{:.1%}"),
             ("ROE", "roe", "{:.1%}"),
             ("Rev growth (YoY)", "rev_growth", "{:.1%}"),
+            ("Current ratio", "current_ratio", "{:.2f}"),
+            ("Buyback (YoY)", "buyback_yoy", "{:+.1%}"),
             ("Earnings yield", "earnings_yield", "{:.1%}"),
             ("Fwd P/E", "forwardPE", "{:.1f}"),
             ("Dividend yield", "dividendYield", "{:.2f}%"),

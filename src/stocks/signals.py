@@ -79,7 +79,9 @@ def recommend(panel, closes: pd.DataFrame,
     df["rekomendasi"] = df["skor"].apply(label_for)
 
     # kolom konteks fundamental (TIDAK memengaruhi skor)
-    for col in ("net_margin", "roe", "rev_growth", "earnings_yield"):
+    for col in ("net_margin", "op_margin", "gross_margin", "fcf_margin",
+                "roe", "rev_growth", "earnings_yield", "current_ratio",
+                "buyback_yoy"):
         if col in snap.columns:
             df[col] = snap[col].reindex(df.index)
     if fund is not None:

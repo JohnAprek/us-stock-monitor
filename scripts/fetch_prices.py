@@ -45,3 +45,14 @@ if __name__ == "__main__":
     miss = [t for t in universe if t not in prices.columns or prices[t].isna().all()]
     if miss:
         print(f"Gagal/kosong ({len(miss)}): {miss}")
+
+    # kurs USD/IDR (konteks harga IDR di app) — disimpan terpisah
+    try:
+        fx = yf.download("IDR=X", period="5d", interval="1d",
+                         progress=False)["Close"].dropna()
+        rate = float(fx.iloc[-1].item() if hasattr(fx.iloc[-1], "item")
+                     else fx.iloc[-1])
+        (ROOT / "data" / "fx_usd_idr.txt").write_text(str(round(rate, 2)))
+        print(f"Kurs USD/IDR: {rate:,.0f}")
+    except Exception as e:
+        print(f"Gagal ambil kurs USD/IDR: {e}")

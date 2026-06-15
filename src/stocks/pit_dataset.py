@@ -78,6 +78,16 @@ def latest_point(rows: pd.DataFrame, asof: pd.Timestamp) -> float:
     return float(k["val"].iloc[-1]) if len(k) else np.nan
 
 
+def point_back(rows: pd.DataFrame, asof: pd.Timestamp, back_days: int = 365) -> float:
+    """Nilai point ~back_days sebelum titik terbaru (untuk hitung perubahan YoY)."""
+    k = rows[rows["filed"] <= asof].sort_values("end")
+    if k.empty:
+        return np.nan
+    target = k["end"].iloc[-1] - pd.Timedelta(days=back_days)
+    prior = k[k["end"] <= target]
+    return float(prior["val"].iloc[-1]) if len(prior) else np.nan
+
+
 class PITPanel:
     def __init__(self, normalized: pd.DataFrame):
         self.q: dict = {}       # (ticker, metric) -> kuartal
@@ -111,11 +121,18 @@ class PITPanel:
                 pr = self.pt.get((t, m))
                 return latest_point(pr, asof) if pr is not None else np.nan
 
+            def PB(m, days=365):
+                pr = self.pt.get((t, m))
+                return point_back(pr, asof, days) if pr is not None else np.nan
+
             rev, rev_prior = T("revenue"), T("revenue", back=4)
             ni, ni_prior = T("net_income"), T("net_income", back=4)
             op = T("op_income")
             fcf = T("cfo") - T("capex") if not np.isnan(T("cfo")) else np.nan
             eq, debt, shares = P("equity"), P("debt"), P("shares")
+            gp, cogs = T("gross_profit"), T("cogs")
+            cur_a, cur_l = P("cur_assets"), P("cur_liab")
+            shares_prior = PB("shares")
 
             mcap = np.nan
             if prices is not None and t in prices.index and shares and shares > 0:
@@ -135,6 +152,14 @@ class PITPanel:
                 "earnings_yield": ni / mcap if mcap and mcap > 0 else np.nan,
                 "book_price": eq / mcap if mcap and mcap > 0 else np.nan,
                 "fcf_yield": fcf / mcap if mcap and mcap > 0 else np.nan,
+                # M7 (B4): metrik lebih dalam
+                "gross_margin": (gp / rev if not np.isnan(gp) and rev
+                                 else ((rev - cogs) / rev
+                                       if not np.isnan(cogs) and rev else np.nan)),
+                "fcf_margin": fcf / rev if not np.isnan(fcf) and rev else np.nan,
+                "current_ratio": cur_a / cur_l if cur_l and cur_l > 0 else np.nan,
+                "buyback_yoy": (-(shares / shares_prior - 1)
+                                if shares_prior and shares_prior > 0 else np.nan),
                 "ttm_revenue": rev, "ttm_ni": ni, "mcap": mcap,
             }
         return pd.DataFrame(rows).T

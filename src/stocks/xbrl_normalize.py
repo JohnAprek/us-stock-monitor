@@ -39,8 +39,15 @@ METRIC_TAGS = {
               "PaymentsToAcquireProductiveAssets"],
     "cash": ["CashAndCashEquivalentsAtCarryingValue",
              "CashCashEquivalentsRestrictedCashAndRestrictedCashEquivalents"],
+    # tambahan M7 (B4): margin kotor, likuiditas, buyback
+    "gross_profit": ["GrossProfit"],
+    "cogs": ["CostOfGoodsAndServicesSold", "CostOfRevenue",
+             "CostOfGoodsSold", "CostOfServices"],
+    "cur_assets": ["AssetsCurrent"],
+    "cur_liab": ["LiabilitiesCurrent"],
 }
-FLOW_METRICS = {"revenue", "net_income", "op_income", "cfo", "capex"}
+FLOW_METRICS = {"revenue", "net_income", "op_income", "cfo", "capex",
+                "gross_profit", "cogs"}
 
 SHARES_TAGS = [
     ("dei", "EntityCommonStockSharesOutstanding", "shares"),
