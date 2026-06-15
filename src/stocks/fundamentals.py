@@ -16,6 +16,8 @@ FIELDS = [
     "numberOfAnalystOpinions", "recommendationKey", "recommendationMean",
     "fiftyTwoWeekHigh", "fiftyTwoWeekLow", "fiftyDayAverage",
     "twoHundredDayAverage",
+    # kalender laba (konteks) — tanggal rilis laporan berikutnya
+    "earningsTimestamp", "earningsTimestampStart",
 ]
 
 

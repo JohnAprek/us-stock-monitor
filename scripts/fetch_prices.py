@@ -16,11 +16,13 @@ from universe_sp500 import TICKERS
 PARQUET = ROOT / "data" / "prices.parquet"
 PERIOD = "4y"
 KEEP_ROWS = 900   # ~3,5 tahun bursa
+BENCHMARKS = ["SPY", "QQQ"]   # acuan indeks (PRD B5)
 
 if __name__ == "__main__":
+    universe = TICKERS + BENCHMARKS
     frames = []
-    for i in range(0, len(TICKERS), 100):
-        batch = TICKERS[i:i + 100]
+    for i in range(0, len(universe), 100):
+        batch = universe[i:i + 100]
         df = yf.download(batch, period=PERIOD, interval="1d", auto_adjust=True,
                          progress=False, threads=True)
         close = df["Close"] if "Close" in df.columns.get_level_values(0) else df
@@ -38,8 +40,8 @@ if __name__ == "__main__":
 
     n_ok = prices.notna().any().sum()
     print(f"\nTersimpan: {PARQUET}")
-    print(f"{prices.shape[0]} hari × {n_ok} ticker (dari {len(TICKERS)} diminta)")
+    print(f"{prices.shape[0]} hari × {n_ok} ticker (dari {len(universe)} diminta)")
     print(f"Periode: {prices.index[0].date()} s/d {prices.index[-1].date()}")
-    miss = [t for t in TICKERS if t not in prices.columns or prices[t].isna().all()]
+    miss = [t for t in universe if t not in prices.columns or prices[t].isna().all()]
     if miss:
         print(f"Gagal/kosong ({len(miss)}): {miss}")

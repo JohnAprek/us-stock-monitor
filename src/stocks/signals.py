@@ -87,7 +87,8 @@ def recommend(panel, closes: pd.DataFrame,
         num_cols = ("forwardPE", "marketCap", "currentPrice", "targetMeanPrice",
                     "targetHighPrice", "targetLowPrice",
                     "numberOfAnalystOpinions", "fiftyTwoWeekHigh",
-                    "fiftyTwoWeekLow", "dividendYield")
+                    "fiftyTwoWeekLow", "dividendYield",
+                    "earningsTimestampStart", "earningsTimestamp")
         for col in text_cols:
             if col in fund.columns:
                 df[col] = fund[col].reindex(df.index)

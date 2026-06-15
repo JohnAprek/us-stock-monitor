@@ -66,6 +66,20 @@ def badge_html(label: str) -> str:
     return f'<span class="badge {badge_class(label)}">{label}</span>'
 
 
+BENCHMARKS = ["SPY", "QQQ"]
+
+
+def earnings_days(r):
+    """Sisa hari ke rilis laba berikutnya (dari earningsTimestampStart)."""
+    ts = pd.to_numeric(r.get("earningsTimestampStart"), errors="coerce")
+    if pd.isna(ts):
+        ts = pd.to_numeric(r.get("earningsTimestamp"), errors="coerce")
+    if pd.isna(ts):
+        return None
+    when = pd.to_datetime(ts, unit="s").normalize()
+    return (when - pd.Timestamp.now().normalize()).days
+
+
 # ---------- data ----------
 @st.cache_data(ttl=3600)
 def load_prices_fund():
@@ -96,6 +110,11 @@ def get_recommendations(w_mom, w_grw):
         return None, closes, fund, {"prices": False, "growth": False, "fund": False}
     try:
         rec = recommend(panel, closes, fund, w_momentum=w_mom, w_growth=w_grw)
+        rec = rec.drop(index=[b for b in BENCHMARKS if b in rec.index],
+                       errors="ignore")
+        # peringkat ulang setelah benchmark dibuang
+        rec = rec.sort_values("skor", ascending=False)
+        rec["peringkat"] = range(1, len(rec) + 1)
     except Exception as e:  # degradasi anggun: jangan pernah blank
         rec = None
         st.session_state["rec_error"] = str(e)
@@ -164,6 +183,9 @@ OPTIONAL_COLS = ["shortName", "sector", "currentPrice", "targetMeanPrice",
 for c in OPTIONAL_COLS:
     if c not in rec.columns:
         rec[c] = pd.NA
+
+# hari ke rilis laba berikutnya (konteks)
+rec["laba_hari"] = rec.apply(earnings_days, axis=1)
 
 # banner degradasi: bila salah satu sumber data bolong, app tetap jalan
 if not status["growth"]:
@@ -286,16 +308,30 @@ n_strong = int((rec["skor"] >= 1.0).sum())
 n_buy = int(((rec["skor"] >= 0.3) & (rec["skor"] < 1.0)).sum())
 avg_up = pd.to_numeric(rec["upside_target"], errors="coerce").median()
 best_ret = pd.to_numeric(rec["ret_1Th"], errors="coerce").median()
-m = st.columns(4)
+
+
+def bench_ret(tkr, days=252):
+    if tkr in closes.columns and len(closes) > days:
+        s = closes[tkr].dropna()
+        if len(s) > days:
+            return s.iloc[-1] / s.iloc[-1 - days] - 1
+    return float("nan")
+
+
+spy_ret = bench_ret("SPY")
+m = st.columns(5)
 m[0].metric("⭐ Sangat direkomendasikan", n_strong)
 m[1].metric("✅ Direkomendasikan", n_buy)
 m[2].metric("Median upside analis",
             f"{avg_up:+.0%}" if pd.notna(avg_up) else "–")
 m[3].metric("Median return 1 thn",
             f"{best_ret:+.0%}" if pd.notna(best_ret) else "–")
+m[4].metric("SPY (S&P 500) 1 thn",
+            f"{spy_ret:+.0%}" if pd.notna(spy_ret) else "–",
+            help="Acuan pasar — bandingkan return median saham vs beli indeks.")
 
-tab1, tab2, tab3 = st.tabs(["⭐ Rekomendasi", "📊 Ringkasan Pasar",
-                            "🔍 Detail Saham"])
+tab1, tab2, tab4, tab3 = st.tabs(["⭐ Rekomendasi", "📊 Ringkasan Pasar",
+                                  "⚖️ Banding", "🔍 Detail Saham"])
 
 # ============ TAB 1: REKOMENDASI ============
 with tab1:
@@ -333,14 +369,14 @@ with tab1:
         cols_show = ["peringkat", "shortName", "sector", "rekomendasi", "skor",
                      "z_momentum", "z_growth", "currentPrice", "targetMeanPrice",
                      "upside_target", "ret_3B", "ret_1Th", "dari_puncak",
-                     "dividendYield", "forwardPE", "recommendationKey"]
+                     "dividendYield", "forwardPE", "laba_hari", "recommendationKey"]
         names = ["#", "Nama", "Sektor", "Rekomendasi", "Skor", "Mom", "Growth",
                  "Harga", "Target", "Upside", "Ret 3B", "Ret 1Th", "Dari puncak",
-                 "Div", "P/E", "Analis"]
+                 "Div", "P/E", "Laba (hari)", "Analis"]
         fmt = {"Skor": "{:+.2f}", "Mom": "{:+.2f}", "Growth": "{:+.2f}",
                "Harga": "${:.2f}", "Target": "${:.2f}", "Upside": "{:+.1%}",
                "Ret 3B": "{:+.1%}", "Ret 1Th": "{:+.1%}", "Dari puncak": "{:+.1%}",
-               "Div": "{:.2f}%", "P/E": "{:.1f}"}
+               "Div": "{:.2f}%", "P/E": "{:.1f}", "Laba (hari)": "{:.0f}"}
     show = view[[c for c in cols_show if c in view.columns]].copy()
     show.columns = names
     st.dataframe(
@@ -391,6 +427,47 @@ with tab2:
         st.dataframe(topdiv.style.format({"Div yield": "{:.2f}%"}),
                      width="stretch", hide_index=True)
 
+# ============ TAB 4: BANDING ============
+with tab4:
+    st.markdown("##### ⚖️ Banding 2–4 saham")
+    default_cmp = (wl[:3] if wl else rec.index[:3].tolist())
+    picks = st.multiselect("Pilih saham (maks 4)", rec.index.tolist(),
+                           default=default_cmp, max_selections=4)
+    show_spy = st.checkbox("Tampilkan SPY (acuan pasar)", True)
+    if len(picks) >= 2:
+        rows = []
+        for t in picks:
+            rr = rec.loc[t]
+            def g(k):
+                return pd.to_numeric(rr.get(k), errors="coerce")
+            rows.append({
+                "Ticker": t, "Nama": rr.get("shortName"),
+                "Rekomendasi": rr["rekomendasi"], "Skor": rr["skor"],
+                "Momentum": rr["z_momentum"], "Growth": rr["z_growth"],
+                "Harga": g("currentPrice"), "Upside": g("upside_target"),
+                "Ret 1Th": g("ret_1Th"), "Net margin": g("net_margin"),
+                "ROE": g("roe"), "Rev growth": g("rev_growth"),
+                "P/E": g("forwardPE"), "Div": g("dividendYield"),
+            })
+        cmp = pd.DataFrame(rows).set_index("Ticker")
+        st.dataframe(
+            cmp.style.format({
+                "Skor": "{:+.2f}", "Momentum": "{:+.2f}", "Growth": "{:+.2f}",
+                "Harga": "${:.2f}", "Upside": "{:+.1%}", "Ret 1Th": "{:+.1%}",
+                "Net margin": "{:.1%}", "ROE": "{:.1%}", "Rev growth": "{:.1%}",
+                "P/E": "{:.1f}", "Div": "{:.2f}%"}, na_rep="–"),
+            width="stretch")
+
+        st.markdown("**Perbandingan harga (ternormalisasi ke 100, 1 tahun)**")
+        series = picks + (["SPY"] if show_spy and "SPY" in closes.columns else [])
+        norm = closes[series].dropna(how="all").tail(252)
+        norm = norm / norm.iloc[0] * 100
+        st.line_chart(norm, height=320)
+        st.caption("Garis di atas 100 = naik sejak setahun lalu. Bandingkan "
+                   "lintasan tiap saham terhadap SPY (pasar).")
+    else:
+        st.info("Pilih minimal 2 saham untuk membandingkan.")
+
 # ============ TAB 3: DETAIL SAHAM ============
 with tab3:
     pick = st.selectbox("Pilih saham",
@@ -406,6 +483,13 @@ with tab3:
                     unsafe_allow_html=True)
         st.caption(f"{r.get('sector', '')} · peringkat #{int(r['peringkat'])} "
                    f"dari {len(rec)}")
+
+        ed = earnings_days(r)
+        if ed is not None and 0 <= ed <= 7:
+            st.warning(f"📅 **Rilis laba dalam {ed} hari** — harga bisa "
+                       "bergejolak. Pertimbangkan menunggu.")
+        elif ed is not None and ed > 7:
+            st.caption(f"📅 Rilis laba berikutnya ~{ed} hari lagi.")
 
         in_wl = pick in wl
         if st.button(("✅ Di watchlist — klik untuk hapus" if in_wl
