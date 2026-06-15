@@ -70,7 +70,12 @@ def badge_html(label: str) -> str:
 @st.cache_data(ttl=3600)
 def load_prices_fund():
     fund = load_fundamentals(ROOT / "data" / "fundamentals.csv")
-    cols = {}
+    pq = ROOT / "data" / "prices.parquet"
+    if pq.exists():                      # konsolidasi cepat (S&P 500)
+        closes = pd.read_parquet(pq)
+        closes.index = pd.to_datetime(closes.index)
+        return fund, closes.sort_index()
+    cols = {}                            # fallback: CSV per ticker
     for f in sorted((ROOT / "data" / "stocks").glob("*.csv")):
         d = pd.read_csv(f, index_col=0, parse_dates=True)
         cols[f.stem] = d["close"]

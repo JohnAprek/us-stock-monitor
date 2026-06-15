@@ -30,8 +30,8 @@ jobs:
       - name: Install deps
         run: pip install -r requirements.txt
 
-      - name: Fetch harga
-        run: python scripts/fetch_stocks.py
+      - name: Fetch harga (S&P 500 -> prices.parquet)
+        run: python scripts/fetch_prices.py
 
       - name: Fetch fundamental (Yahoo)
         run: python scripts/fetch_fundamentals.py

@@ -8,11 +8,17 @@ dilakukan di M3 (saat TTM tersedia).
 Pakai: python scripts/build_edgar_dataset.py
 """
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
 
 from _common import ROOT, load_config  # noqa: F401
+
+try:  # console Windows kadang cp1252 — jangan crash karakter unicode
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
 
 from src.stocks.fundamentals import load_fundamentals
 from src.stocks.xbrl_normalize import annual_flows, normalize_companyfacts

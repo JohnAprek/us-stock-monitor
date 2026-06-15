@@ -4,7 +4,7 @@ Pakai: python scripts/fetch_fundamentals.py
 """
 from _common import ROOT, load_config  # noqa: F401
 
-from fetch_stocks import TICKERS
+from universe_sp500 import TICKERS
 
 from src.stocks.fundamentals import fetch_fundamentals
 

@@ -2,6 +2,8 @@
 __pycache__/
 *.pyc
 data/edgar_raw/
+data/stocks/
+data/sp500.json
 models/
 data/portfolio_log/
 .streamlit/secrets.toml
