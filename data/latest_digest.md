@@ -1,22 +1,19 @@
-📈 **US Stock Monitor — Premium Digest · 2026-08-21**
+📈 **US Stock Monitor — Premium Digest · 2026-08-28**
 
-_42 strongly recommended · 87 recommended · 493 S&P 500 stocks · momentum + growth model_
+_45 strongly recommended · 85 recommended · 493 S&P 500 stocks · momentum + growth model_
 
 **Top 10:**
-1. **MU** — score +3.71 · $967 · analyst target +57% · 1y +726%
-2. **AMD** — score +3.25 · $473 · analyst target +30% · 1y +186%
-3. **DELL** — score +3.17 · $442 · analyst target +15% · 1y +248%
-4. **CRWD** — score +2.80 · $192 · analyst target +9% · 1y +83%
-5. **STX** — score +2.79 · $850 · analyst target +32% · 1y +441%
-6. **WDC** — score +2.58 · $459 · analyst target +45% · 1y +509%
-7. **DDOG** — score +2.45 · $236 · analyst target +21% · 1y +83%
-8. **VLO** — score +2.42 · $349 · analyst target -10% · 1y +154%
-9. **HPE** — score +2.38 · $53 · analyst target +22% · 1y +159%
-10. **FTNT** — score +2.27 · $154 · analyst target +5% · 1y +93%
+1. **MU** — score +3.69 · $945 · analyst target +60% · 1y +694%
+2. **AMD** — score +3.23 · $466 · analyst target +32% · 1y +179%
+3. **DELL** — score +3.15 · $463 · analyst target +10% · 1y +249%
+4. **WDC** — score +2.93 · $450 · analyst target +48% · 1y +471%
+5. **CRWD** — score +2.78 · $227 · analyst target +0% · 1y +107%
+6. **STX** — score +2.77 · $815 · analyst target +38% · 1y +400%
+7. **DDOG** — score +2.42 · $237 · analyst target +20% · 1y +80%
+8. **HPE** — score +2.36 · $54 · analyst target +22% · 1y +135%
+9. **VLO** — score +2.31 · $357 · analyst target -11% · 1y +139%
+10. **FTNT** — score +2.27 · $168 · analyst target -4% · 1y +112%
 
-🆕 **New in top 10:** FTNT
-🔻 **Dropped from top 10:** LITE
-
-📅 **Earnings within 7 days:** CRWD (2d), NVDA (2d)
+📅 **Earnings within 7 days:** DELL (1d), HPE (2d), PANW (1d), CIEN (3d), AVGO (2d), NTAP (2d)
 
 _Research tool, not investment advice. You execute trades yourself._
