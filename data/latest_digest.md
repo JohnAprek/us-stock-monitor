@@ -1,17 +1,20 @@
-📈 **US Stock Monitor — Premium Digest · 2026-10-05**
+📈 **US Stock Monitor — Premium Digest · 2026-10-12**
 
-_52 strongly recommended · 76 recommended · 490 S&P 500 stocks · momentum + growth model_
+_44 strongly recommended · 74 recommended · 490 S&P 500 stocks · momentum + growth model_
 
 **Top 10:**
-1. **MU** — score +3.48 · $1,066 · analyst target +43% · 1y +482%
-2. **DELL** — score +2.92 · $558 · analyst target +5% · 1y +284%
-3. **SMCI** — score +2.82 · $44 · analyst target -3% · 1y -17%
-4. **VLO** — score +2.66 · $411 · analyst target -11% · 1y +155%
-5. **AMD** — score +2.65 · $631 · analyst target -1% · 1y +272%
-6. **STX** — score +2.40 · $893 · analyst target +26% · 1y +254%
-7. **CRWD** — score +2.36 · $271 · analyst target -13% · 1y +119%
-8. **INCY** — score +2.36 · $114 · analyst target +13% · 1y +32%
-9. **HPE** — score +2.30 · $69 · analyst target +4% · 1y +186%
-10. **DDOG** — score +2.17 · $280 · analyst target +3% · 1y +84%
+1. **MU** — score +3.70 · $986 · analyst target +58% · 1y +413%
+2. **DELL** — score +3.15 · $572 · analyst target +2% · 1y +272%
+3. **VLO** — score +3.09 · $434 · analyst target -11% · 1y +172%
+4. **AMD** — score +2.87 · $588 · analyst target +8% · 1y +152%
+5. **CRWD** — score +2.59 · $266 · analyst target -10% · 1y +108%
+6. **HPE** — score +2.53 · $70 · analyst target +3% · 1y +172%
+7. **DDOG** — score +2.44 · $292 · analyst target -1% · 1y +77%
+8. **MPC** — score +2.40 · $457 · analyst target -10% · 1y +147%
+9. **PLTR** — score +2.29 · $207 · analyst target -2% · 1y +12%
+10. **INCY** — score +2.23 · $113 · analyst target +14% · 1y +33%
+
+🆕 **New in top 10:** MPC, PLTR
+🔻 **Dropped from top 10:** SMCI, STX
 
 _Research tool, not investment advice. You execute trades yourself._
