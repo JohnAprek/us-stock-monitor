@@ -1,22 +1,22 @@
-📈 **US Stock Monitor — Premium Digest · 2026-10-23**
+📈 **US Stock Monitor — Premium Digest · 2026-11-02**
 
-_44 strongly recommended · 73 recommended · 490 S&P 500 stocks · momentum + growth model_
+_46 strongly recommended · 71 recommended · 489 S&P 500 stocks · momentum + growth model_
 
 **Top 10:**
-1. **MU** — score +3.57 · $878 · analyst target +78% · 1y +343%
-2. **VLO** — score +3.20 · $419 · analyst target +1% · 1y +165%
-3. **DELL** — score +3.02 · $456 · analyst target +30% · 1y +207%
-4. **AMD** — score +2.74 · $517 · analyst target +23% · 1y +124%
-5. **SMCI** — score +2.58 · $33 · analyst target +31% · 1y -37%
-6. **PLTR** — score +2.48 · $197 · analyst target +5% · 1y +12%
-7. **CRWD** — score +2.46 · $258 · analyst target -4% · 1y +106%
-8. **MPC** — score +2.44 · $457 · analyst target +0% · 1y +147%
-9. **INCY** — score +2.41 · $116 · analyst target +12% · 1y +31%
-10. **HPE** — score +2.40 · $57 · analyst target +27% · 1y +150%
+1. **VLO** — score +3.35 · $395 · analyst target +8% · 1y +137%
+2. **MU** — score +3.34 · $879 · analyst target +78% · 1y +293%
+3. **PSX** — score +2.97 · $282 · analyst target +3% · 1y +112%
+4. **DELL** — score +2.96 · $418 · analyst target +42% · 1y +162%
+5. **SMCI** — score +2.72 · $33 · analyst target +30% · 1y -34%
+6. **AMD** — score +2.68 · $504 · analyst target +28% · 1y +98%
+7. **PLTR** — score +2.66 · $187 · analyst target +14% · 1y -4%
+8. **MPC** — score +2.47 · $444 · analyst target +3% · 1y +131%
+9. **CRWD** — score +2.37 · $251 · analyst target -2% · 1y +85%
+10. **HPE** — score +2.33 · $55 · analyst target +33% · 1y +127%
 
-🆕 **New in top 10:** SMCI, PLTR
-🔻 **Dropped from top 10:** PSX, DDOG
+🆕 **New in top 10:** PSX
+🔻 **Dropped from top 10:** INCY
 
-📅 **Earnings within 7 days:** PLTR (7d), INCY (3d), PSX (2d), STX (1d), LLY (3d), FTNT (2d), BXP (1d), WTW (3d), HOOD (1d), EXE (1d), APH (2d), GEV (2d), TER (1d), NOW (2d), IQV (1d)
+📅 **Earnings within 7 days:** SMCI (1d), AMD (1d), PLTR (0d), MPC (1d), DDOG (2d), AMCR (2d), COHR (2d), HUM (4d), ZBRA (1d), PTC (2d), IRM (3d), RVTY (1d), WAT (1d), TPR (3d), CPT (3d)
 
 _Research tool, not investment advice. You execute trades yourself._
