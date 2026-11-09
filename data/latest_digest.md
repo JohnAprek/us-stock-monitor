@@ -1,22 +1,22 @@
-📈 **US Stock Monitor — Premium Digest · 2026-11-02**
+📈 **US Stock Monitor — Premium Digest · 2026-11-09**
 
-_46 strongly recommended · 71 recommended · 489 S&P 500 stocks · momentum + growth model_
+_43 strongly recommended · 78 recommended · 489 S&P 500 stocks · momentum + growth model_
 
 **Top 10:**
-1. **VLO** — score +3.35 · $395 · analyst target +8% · 1y +137%
-2. **MU** — score +3.34 · $879 · analyst target +78% · 1y +293%
-3. **PSX** — score +2.97 · $282 · analyst target +3% · 1y +112%
-4. **DELL** — score +2.96 · $418 · analyst target +42% · 1y +162%
-5. **SMCI** — score +2.72 · $33 · analyst target +30% · 1y -34%
-6. **AMD** — score +2.68 · $504 · analyst target +28% · 1y +98%
-7. **PLTR** — score +2.66 · $187 · analyst target +14% · 1y -4%
-8. **MPC** — score +2.47 · $444 · analyst target +3% · 1y +131%
-9. **CRWD** — score +2.37 · $251 · analyst target -2% · 1y +85%
-10. **HPE** — score +2.33 · $55 · analyst target +33% · 1y +127%
+1. **VLO** — score +3.45 · $356 · analyst target +20% · 1y +106%
+2. **PSX** — score +3.23 · $252 · analyst target +16% · 1y +87%
+3. **PLTR** — score +3.00 · $170 · analyst target +31% · 1y -3%
+4. **DELL** — score +2.99 · $353 · analyst target +67% · 1y +138%
+5. **MPC** — score +2.55 · $390 · analyst target +20% · 1y +105%
+6. **CRWD** — score +2.41 · $225 · analyst target +11% · 1y +69%
+7. **MU** — score +2.38 · $739 · analyst target +111% · 1y +210%
+8. **HPE** — score +2.36 · $49 · analyst target +48% · 1y +111%
+9. **APH** — score +2.04 · $80 · analyst target +34% · 1y +16%
+10. **COF** — score +1.90 · $201 · analyst target +27% · 1y -6%
 
-🆕 **New in top 10:** PSX
-🔻 **Dropped from top 10:** INCY
+🆕 **New in top 10:** APH, COF
+🔻 **Dropped from top 10:** AMD, SMCI
 
-📅 **Earnings within 7 days:** SMCI (1d), AMD (1d), PLTR (0d), MPC (1d), DDOG (2d), AMCR (2d), COHR (2d), HUM (4d), ZBRA (1d), PTC (2d), IRM (3d), RVTY (1d), WAT (1d), TPR (3d), CPT (3d)
+📅 **Earnings within 7 days:** TECH (0d)
 
 _Research tool, not investment advice. You execute trades yourself._
