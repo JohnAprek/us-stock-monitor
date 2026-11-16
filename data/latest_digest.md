@@ -1,22 +1,22 @@
-📈 **US Stock Monitor — Premium Digest · 2026-11-09**
+📈 **US Stock Monitor — Premium Digest · 2026-11-16**
 
-_43 strongly recommended · 78 recommended · 489 S&P 500 stocks · momentum + growth model_
+_44 strongly recommended · 83 recommended · 489 S&P 500 stocks · momentum + growth model_
 
 **Top 10:**
-1. **VLO** — score +3.45 · $356 · analyst target +20% · 1y +106%
-2. **PSX** — score +3.23 · $252 · analyst target +16% · 1y +87%
-3. **PLTR** — score +3.00 · $170 · analyst target +31% · 1y -3%
-4. **DELL** — score +2.99 · $353 · analyst target +67% · 1y +138%
-5. **MPC** — score +2.55 · $390 · analyst target +20% · 1y +105%
-6. **CRWD** — score +2.41 · $225 · analyst target +11% · 1y +69%
-7. **MU** — score +2.38 · $739 · analyst target +111% · 1y +210%
-8. **HPE** — score +2.36 · $49 · analyst target +48% · 1y +111%
-9. **APH** — score +2.04 · $80 · analyst target +34% · 1y +16%
-10. **COF** — score +1.90 · $201 · analyst target +27% · 1y -6%
+1. **PSX** — score +3.19 · $260 · analyst target +12% · 1y +92%
+2. **VLO** — score +3.19 · $371 · analyst target +14% · 1y +116%
+3. **PLTR** — score +2.80 · $161 · analyst target +39% · 1y -6%
+4. **DELL** — score +2.74 · $325 · analyst target +80% · 1y +145%
+5. **MU** — score +2.41 · $724 · analyst target +116% · 1y +207%
+6. **MPC** — score +2.29 · $402 · analyst target +14% · 1y +111%
+7. **HPE** — score +2.10 · $46 · analyst target +56% · 1y +105%
+8. **APH** — score +2.07 · $76 · analyst target +41% · 1y +13%
+9. **AMCR** — score +1.92 · $44 · analyst target +12% · 1y +9%
+10. **COF** — score +1.88 · $194 · analyst target +31% · 1y -9%
 
-🆕 **New in top 10:** APH, COF
-🔻 **Dropped from top 10:** AMD, SMCI
+🆕 **New in top 10:** AMCR
+🔻 **Dropped from top 10:** CRWD
 
-📅 **Earnings within 7 days:** TECH (0d)
+📅 **Earnings within 7 days:** HPE (7d), NVDA (1d), A (7d), PANW (2d)
 
 _Research tool, not investment advice. You execute trades yourself._
